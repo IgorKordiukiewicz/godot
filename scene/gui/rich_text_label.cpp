@@ -2996,7 +2996,25 @@ void RichTextLabel::append_text(const String &p_bbcode) {
 		}
 
 		if (brk_pos > pos) {
-			add_text(p_bbcode.substr(pos, brk_pos - pos));
+			// If text between previous ']' and current '[' contains only non-printable characters, it should be ignored
+			int previous_closing_bracket_pos = -1;
+			bool all_non_printable = true;
+			for (int i = brk_pos - 1; i >= 0; --i) {
+				const char32_t c = p_bbcode[i];
+				if (c <= 32) {
+					continue;
+				} else if (c == ']') {
+					previous_closing_bracket_pos = i;
+					break;
+				} else {
+					all_non_printable = false;
+					break;
+				}
+			}
+
+			if (!all_non_printable || previous_closing_bracket_pos == -1) {
+				add_text(p_bbcode.substr(pos, brk_pos - pos));
+			}
 		}
 
 		if (brk_pos == p_bbcode.length()) {
